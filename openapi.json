@@ -1,0 +1,45 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "Medical Scribe Tool",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "REPLACE_WITH_YOUR_CODE_ENGINE_URL"
+        }
+    ],
+    "paths": {
+        "/scribe": {
+            "post": {
+                "summary": "Process medical intake",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "transcript": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
