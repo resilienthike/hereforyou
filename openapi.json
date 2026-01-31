@@ -12,7 +12,9 @@
     "paths": {
         "/scribe": {
             "post": {
+                "operationId": "processMedicalIntake",
                 "summary": "Process medical intake",
+                "description": "Use this tool whenever a nurse starts a patient intake or a patient describes symptoms. It analyzes the conversation for medical details and creates a legal log.",
                 "requestBody": {
                     "content": {
                         "application/json": {

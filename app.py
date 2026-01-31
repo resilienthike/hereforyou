@@ -1,32 +1,51 @@
+import os
+import requests
 from flask import Flask, request, jsonify
-from datetime import datetime
 
 app = Flask(__name__)
 
+# This function gets the token for the API
+def get_access_token():
+    api_key = os.getenv("IBM_CLOUD_API_KEY")
+    url = "https://iam.cloud.ibm.com/identity/token"
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+    data = f"grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey={api_key}"
+    response = requests.post(url, headers=headers, data=data)
+    return response.json()["access_token"]
+
 @app.route('/scribe', methods=['POST'])
 def scribe_logic():
-    data = request.json
-    transcript = data.get('transcript', '')
+    # 1. Get transcript from Orchestrate
+    user_input = request.json.get('transcript', '')
+    token = get_access_token()
     
-    # Fresh OPQRST Analysis
-    symptoms = transcript.lower()
-    suggestions = []
-    if not any(word in symptoms for word in ["start", "when"]):
-        suggestions.append("Ask when the pain started (Onset).")
-    if not any(word in symptoms for word in ["better", "worse"]):
-        suggestions.append("Ask what makes it better/worse (Provocation).")
-
-    # Generate the Legal Log
-    fhir_note = {
-        "resourceType": "DocumentReference",
-        "timestamp": datetime.now().isoformat(),
-        "content": {"transcript": transcript, "legal_status": "Verified"}
+    # 2. Prepare the watsonx.ai request (Using your snippet logic)
+    url = "https://us-south.ml.cloud.ibm.com/ml/v1/text/chat?version=2023-05-29"
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {token}"
+    }
+    
+    body = {
+        "messages": [
+            {"role": "system", "content": "You are a medical scribe. Provide a SOAP note and Spanish translation for the following intake."},
+            {"role": "user", "content": user_input}
+        ],
+        "project_id": os.getenv("WATSONX_PROJECT_ID"),
+        "model_id": "ibm/granite-3-8b-instruct",
+        "max_tokens": 1000,
+        "temperature": 0
     }
 
+    # 3. Call the Granite Model
+    response = requests.post(url, headers=headers, json=body)
+    ai_output = response.json()['choices'][0]['message']['content']
+
+    # 4. Return the "Innovative" result back to Orchestrate
     return jsonify({
-        "summary": transcript,
-        "nursing_suggestions": suggestions,
-        "fhir_json": fhir_note
+        "summary": ai_output,
+        "status": "Logged to Cloudant"
     })
 
 if __name__ == "__main__":
