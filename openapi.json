@@ -6,7 +6,7 @@
     },
     "servers": [
         {
-            "url": "REPLACE_WITH_YOUR_CODE_ENGINE_URL"
+            "url": "https://hereforyou.25rb1jlin0w0.us-south.codeengine.appdomain.cloud"
         }
     ],
     "paths": {
